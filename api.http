@@ -8,7 +8,7 @@ GET {{url}}
 GET {{url}}/buscar?tecnico=lionel
 
 ### 3. Obtener un equipo por ID existente (reemplaza el ID por uno real de tu base de datos)
-GET {{url}}/5f9b3b3b3b3b3b3b3b3b3b31
+GET {{url}}/6a2f30be848c43cd7961bb74
 
 ### 4. Crear un nuevo equipo (Exitoso)
 POST {{url}}
@@ -31,7 +31,7 @@ Content-Type: application/json
 }
 
 ### 6. Actualizar un equipo existente (reemplaza el ID)
-PUT {{url}}/5f9b3b3b3b3b3b3b3b3b3b31
+PUT {{url}}/6a2f30be848c43cd7961bb98
 Content-Type: application/json
 
 {
@@ -42,4 +42,4 @@ Content-Type: application/json
 }
 
 ### 7. Eliminar un equipo existente (reemplaza el ID)
-DELETE {{url}}/5f9b3b3b3b3b3b3b3b3b3b32
+DELETE {{url}}/6a2f30be848c43cd7961bb74
