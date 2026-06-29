@@ -19,33 +19,62 @@ const PORT = process.env.PORT || 3000;
  * 2. Debe retornar el arreglo con status 200.
  */
 app.get('/equipos', async (req, res) => {
-    // Tu código aquí
+    try {
+        const equipos = await Equipo.find();
+        res.status(200).json(equipos);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 /**
  * TODO: Implementar un endpoint GET /equipos/buscar
  * 1. Debe obtener el parámetro de consulta 'tecnico' (req.query.tecnico).
  * 2. Debe usar expresiones regulares u operadores de MongoDB para buscar aquellos
- *    equipos cuyo 'tecnico' contenga el nombre buscado (insensible a mayúsculas: $regex / $options: 'i').
- *    Tip: Puedes pasar una expresión regular en la consulta de Mongoose.
+ * equipos cuyo 'tecnico' contenga el nombre buscado (insensible a mayúsculas: $regex / $options: 'i').
+ * Tip: Puedes pasar una expresión regular en la consulta de Mongoose.
  * 3. Debe retornar el arreglo filtrado con status 200.
  * IMPORTANTE: ¡Esta ruta debe ir ANTES que la ruta GET /equipos/:id!
  */
 app.get('/equipos/buscar', async (req, res) => {
-    // Tu código aquí
+    try {
+        const { tecnico } = req.query;
+        const equipos = await Equipo.find({ 
+            tecnico: { $regex: tecnico, $options: 'i' } 
+        });
+        res.status(200).json(equipos);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 /**
  * TODO: Implementar un endpoint GET /equipos/:id
  * 1. Debe obtener el id de los parámetros de la URL.
  * 2. Validar que el id sea un ObjectId válido usando mongoose.Types.ObjectId.isValid().
- *    Si no lo es, responde con status 400 y el mensaje { error: "ID inválido" }.
+ * Si no lo es, responde con status 400 y el mensaje { error: "ID inválido" }.
  * 3. Si es válido, utiliza Equipo.findById(id) para buscar el documento.
  * 4. Si lo encuentra, retornarlo con status 200.
  * 5. Si no lo encuentra, retornar un status 404 y { error: "Equipo no encontrado" }.
  */
 app.get('/equipos/:id', async (req, res) => {
-    // Tu código aquí
+    try {
+        const { id } = req.params;
+        
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: "ID inválido" });
+        }
+
+        const equipo = await Equipo.findById(id);
+        
+        if (!equipo) {
+            return res.status(404).json({ error: "Equipo no encontrado" });
+        }
+        
+        res.status(200).json(equipo);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 /**
@@ -53,24 +82,62 @@ app.get('/equipos/:id', async (req, res) => {
  * 1. Debe extraer equipo, tecnico, continente y campeonatos_mundiales del req.body.
  * 2. Intenta instanciar un nuevo Equipo() y utilizar el método save() del documento, o utiliza Equipo.create().
  * 3. Si hay errores de validación de Mongoose (falta algún campo o tipo incorrecto), debes atraparlos 
- *    y retornar status 400 con un JSON: { error: error.message }.
+ * y retornar status 400 con un JSON: { error: error.message }.
  * 4. Si se guarda exitosamente, debe retornar el nuevo equipo y status 201.
  */
 app.post('/equipos', async (req, res) => {
-    // Tu código aquí
+    try {
+        const { equipo, tecnico, continente, campeonatos_mundiales } = req.body;
+        const nuevoEquipo = await Equipo.create({ 
+            equipo, 
+            tecnico, 
+            continente, 
+            campeonatos_mundiales 
+        });
+        res.status(201).json(nuevoEquipo);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
 /**
  * TODO: Implementar un endpoint PUT /equipos/:id
  * 1. Valida que el ID de los parámetros sea un ObjectId válido. Si no lo es, retorna 400.
  * 2. Utiliza Equipo.findByIdAndUpdate() con los parámetros apropiados para actualizar el documento.
- *    (Recuerda pasar las opciones { new: true, runValidators: true } si corresponde).
+ * (Recuerda pasar las opciones { new: true, runValidators: true } si corresponde).
  * 3. Si no se encontró el documento, retorna 404.
  * 4. Si fue exitoso, retorna status 200 y opcionalmente el equipo actualizado.
  * 5. Si hay errores de validación (por ejemplo, tipos incorrectos), retorna 400.
  */
 app.put('/equipos/:id', async (req, res) => {
-    // Tu código aquí
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: "ID inválido" });
+        }
+
+        const camposRequeridos = ['equipo', 'tecnico', 'continente', 'campeonatos_mundiales'];
+        const faltanCampos = camposRequeridos.some(campo => req.body[campo] === undefined);
+        
+        if (faltanCampos) {
+            return res.status(400).json({ error: "Faltan campos obligatorios para actualizar el equipo" });
+        }
+
+        const equipoActualizado = await Equipo.findByIdAndUpdate(
+            id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+
+        if (!equipoActualizado) {
+            return res.status(404).json({ error: "Equipo no encontrado" });
+        }
+
+        res.status(200).json(equipoActualizado);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
 /**
@@ -81,7 +148,23 @@ app.put('/equipos/:id', async (req, res) => {
  * 4. Si se eliminó correctamente, retorna status 200.
  */
 app.delete('/equipos/:id', async (req, res) => {
-    // Tu código aquí
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: "ID inválido" });
+        }
+
+        const equipoEliminado = await Equipo.findByIdAndDelete(id);
+
+        if (!equipoEliminado) {
+            return res.status(404).json({ error: "Equipo no encontrado" });
+        }
+
+        res.status(200).json(equipoEliminado);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // Iniciar el servidor solo si este archivo se ejecuta directamente
